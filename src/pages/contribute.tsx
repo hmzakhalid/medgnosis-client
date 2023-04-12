@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   createStyles,
   Container,
@@ -160,7 +160,7 @@ const DropzoneComponent = ({
         className={classes.title}
         style={{ textAlign: "center", marginBottom: 20 }}
       >
-        Upload Data for Training
+        Upload Data and Start Training
       </Title>
       <Dropzone
         maxFiles={1}
@@ -243,6 +243,33 @@ export default function Home() {
   const [tableRows, setTableRows] = useState<CardioData[]>([]);
   const [file, setFile] = useState<FileWithPath>();
 
+  const handleStartTraining = async () => {
+    if (!file) {
+      console.error("No file selected");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      const response = await fetch("http://localhost:8000/upload", {
+        method: "POST",
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log(data.message);
+    } catch (error) {
+      console.error("Error starting training:", error);
+    }
+  };
+
+  
   return (
     <>
       <Head>
@@ -251,47 +278,46 @@ export default function Home() {
       </Head>
 
       <Layout>
-        <Container className={classes.wrapper} size={1200}>
-          {tableRows.length > 0 ? (
-            <>
-              <Title
-                className={classes.title}
-                style={{ textAlign: "center", marginBottom: 20 }}
-              >
-                Preview Data
-              </Title>
-              <ScrollArea h={400} className="my-8">
+        {tableRows.length > 0 ? (
+          <>
+            <Title
+              className={classes.title}
+              style={{ textAlign: "center", marginBottom: 20 }}
+            >
+              Preview Data
+            </Title>
+            <ScrollArea h={400} className="my-8">
               {displayTable(tableRows)}
-              </ScrollArea>
-              <Center>
-                <Button
+            </ScrollArea>
+            <Center>
+              <Button
                 className="mx-2"
-                  color="red"
-                  variant="light"
-                  onClick={() => {
-                    setTableRows([]);
-                    setFile(undefined);
-                  }}
-                >
-                  Reset
-                </Button>
-                <Button
+                color="red"
+                variant="light"
+                onClick={() => {
+                  setTableRows([]);
+                  setFile(undefined);
+                }}
+              >
+                Reset
+              </Button>
+              <Button
                 className="mx-2"
-                  color="violet"
-                  variant="light"
-                  onClick={() => {
-                    setTableRows([]);
-                    setFile(undefined);
-                  }}
-                >
-                  Upload
-                </Button>
-              </Center>
-            </>
-          ) : (
-            <DropzoneComponent setTableRows={setTableRows} setFile={setFile} />
-          )}
-        </Container>
+                color="violet"
+                variant="light"
+                onClick={handleStartTraining}
+                // onClick={() => {
+                //   setTableRows([]);
+                //   setFile(undefined);
+                // }}
+              >
+                Start Training
+              </Button>
+            </Center>
+          </>
+        ) : (
+          <DropzoneComponent setTableRows={setTableRows} setFile={setFile} />
+        )}
       </Layout>
     </>
   );

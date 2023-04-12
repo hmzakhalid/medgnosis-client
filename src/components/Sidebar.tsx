@@ -24,6 +24,7 @@ export default function SidebarComponent(props: Props) {
       p="md"
       height="100vh"
       style={{ paddingTop: -70 }}
+      className="bg-violet-900/20"
     >
       <Navbar.Section grow>
         <Link href="/">
@@ -37,7 +38,7 @@ export default function SidebarComponent(props: Props) {
           />
         </Link>
         <NavLink name="Dashboard" icon={<IconHome />} link="/main" />
-        <NavLink name="Contribution" icon={<IconDrone />} link="/contribute" />
+        <NavLink name="Contribute" icon={<IconDrone />} link="/contribute" />
         <NavLink name="Prediction" icon={<IconUser />} link="/predict" />
 
         <div className="absolute bottom-8 max-w-[12rem] w-full">

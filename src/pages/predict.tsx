@@ -1,28 +1,21 @@
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import Layout from "@/components/Layout";
+import Link from "next/link";
 import { z } from "zod";
+import { useState } from "react";
+import { useForm, zodResolver } from "@mantine/form";
 import {
   createStyles,
-  useMantineTheme,
   Container,
   Text,
-  ScrollArea,
-  Table,
   Title,
   Grid,
   Checkbox,
-  Stepper,
   Button,
   Paper,
   Select,
-  Group,
   TextInput,
-  PasswordInput,
-  Code,
 } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
-import Link from "next/link";
-import Layout from "@/components/Layout";
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -176,231 +169,274 @@ const cardioDataSchema = z.object({
       3,
       "Invalid glucose value, use 1 for normal, 2 for above normal, or 3 for well above normal"
     ),
-  SMOKE: z
-    .number()
-    .min(0, "Invalid smoke value, use 0 for non-smoker or 1 for smoker")
-    .max(1, "Invalid smoke value, use 0 for non-smoker or 1 for smoker"),
-  ALCOHOL: z
-    .number()
-    .min(0, "Invalid alcohol value, use 0 for non-drinker or 1 for drinker")
-    .max(1, "Invalid alcohol value, use 0 for non-drinker or 1 for drinker"),
-  PHYSICAL_ACTIVITY: z
-    .number()
-    .min(
-      0,
-      "Invalid physical activity value, use 0 for low activity or 1 for high activity"
-    )
-    .max(
-      1,
-      "Invalid physical activity value, use 0 for low activity or 1 for high activity"
-    ),
-  CARDIO_DISEASE: z
-    .number()
-    .min(
-      0,
-      "Invalid cardio disease value, use 0 for no disease or 1 for disease"
-    )
-    .max(
-      1,
-      "Invalid cardio disease value, use 0 for no disease or 1 for disease"
-    ),
+  SMOKE: z.boolean(),
+  ALCOHOL: z.boolean(),
+  PHYSICAL_ACTIVITY: z.boolean(),
+  CARDIO_DISEASE: z.boolean(),
 });
 
 const CardioDataForm = () => {
   const { classes } = useStyles();
 
+  const [prediction, setPrediction] = useState(0);
+
   const form = useForm({
     initialValues: {
       Name: "",
-      AGE: "",
-      GENDER: "",
-      HEIGHT: "",
-      WEIGHT: "",
-      AP_HIGH: "",
-      AP_LOW: "",
-      CHOLESTEROL: "",
-      GLUCOSE: "",
+      AGE: 1,
+      GENDER: 1,
+      HEIGHT: 50,
+      WEIGHT: 2,
+      AP_HIGH: 50,
+      AP_LOW: 30,
+      CHOLESTEROL: 1,
+      GLUCOSE: 1,
       SMOKE: false,
       ALCOHOL: false,
       PHYSICAL_ACTIVITY: false,
       CARDIO_DISEASE: false,
     },
-
     validate: zodResolver(cardioDataSchema),
   });
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    // make an array of the values
+    const values = Object.values(form.values);
+    values.shift(); // remove the first value
+    values.pop(); // remove the last value
+
+    // fetch the prediction
+    try {
+      const response = await fetch("http://localhost:8000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ data: values }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+
+      const data = await response.json();
+      setPrediction(data.predictions);
+    } catch (error) {
+      console.error("Error fetching prediction:", error);
+    }
+  };
+
   return (
     <div className={classes.inner}>
-      <Title className={classes.title}>Enter a New Patient&apos;s Data</Title>
-      <Container p={0} size={1000}>
-        <Paper p="md">
-          <form>
-            <Grid gutter="md" align="center">
-              <Grid.Col span={4}>
-                <TextInput
-                  label="Name"
-                  placeholder="Enter Name"
-                  value={form.values.Name}
-                  onChange={(event) =>
-                    form.setFieldValue("Name", event.currentTarget.value)
-                  }
-                  error={form.errors.Name}
-                />
-              </Grid.Col>
-              <Grid.Col span={4}>
-                <TextInput
-                  label="Age"
-                  placeholder="Enter age"
-                  value={form.values.AGE}
-                  onChange={(event) =>
-                    form.setFieldValue("AGE", event.currentTarget.value)
-                  }
-                  error={form.errors.AGE}
-                />
-              </Grid.Col>
-              <Grid.Col span={4}>
-                <Select
-                  label="Gender"
-                  placeholder="Select Gender"
-                  defaultValue="1"
-                  onChange={(value) =>
-                    form.setFieldValue("GENDER", value ? value : "")
-                  }
-                  data={[
-                    { value: "1", label: "Male" },
-                    { value: "2", label: "Female" },
-                  ]}
-                  error={form.errors.GENDER}
-                />
-              </Grid.Col>
+      <Title className={classes.title}>Make a Prediction</Title>
+      <Paper p="md">
+        <form onSubmit={handleSubmit}>
+          <Grid gutter="md" align="center">
+            <Grid.Col span={4}>
+              <TextInput
+                label="Name"
+                placeholder="Enter Name"
+                value={form.values.Name}
+                onChange={(event) =>
+                  form.setFieldValue("Name", event.currentTarget.value)
+                }
+                error={form.errors.Name}
+              />
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <TextInput
+                label="Age"
+                placeholder="Enter age"
+                type="number"
+                value={form.values.AGE}
+                onChange={(event) =>
+                  form.setFieldValue("AGE", Number(event.currentTarget.value))
+                }
+                error={form.errors.AGE}
+              />
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <Select
+                label="Gender"
+                placeholder="Select Gender"
+                defaultValue="1"
+                onChange={(value) =>
+                  form.setFieldValue("GENDER", value ? Number(value) : 1)
+                }
+                data={[
+                  { value: "1", label: "Male" },
+                  { value: "2", label: "Female" },
+                ]}
+                error={form.errors.GENDER}
+              />
+            </Grid.Col>
 
-              <Grid.Col span={6}>
-                <TextInput
-                  label="Height"
-                  placeholder="Enter Height"
-                  value={form.values.HEIGHT}
-                  onChange={(event) =>
-                    form.setFieldValue("Height", event.currentTarget.value)
-                  }
-                  error={form.errors.HEIGHT}
-                />
-              </Grid.Col>
+            <Grid.Col span={6}>
+              <TextInput
+                label="Height"
+                placeholder="Enter Height"
+                type="number"
+                value={form.values.HEIGHT}
+                onChange={(event) =>
+                  form.setFieldValue(
+                    "HEIGHT",
+                    Number(event.currentTarget.value)
+                  )
+                }
+                error={form.errors.HEIGHT}
+              />
+            </Grid.Col>
 
-              <Grid.Col span={6}>
-                <TextInput
-                  label="Weight"
-                  placeholder="Enter Weight"
-                  value={form.values.WEIGHT}
-                  onChange={(event) =>
-                    form.setFieldValue("WEIGHT", event.currentTarget.value)
-                  }
-                  error={form.errors.WEIGHT}
-                />
-              </Grid.Col>
+            <Grid.Col span={6}>
+              <TextInput
+                label="Weight"
+                placeholder="Enter Weight"
+                type="number"
+                value={form.values.WEIGHT}
+                onChange={(event) =>
+                  form.setFieldValue(
+                    "WEIGHT",
+                    Number(event.currentTarget.value)
+                  )
+                }
+                error={form.errors.WEIGHT}
+              />
+            </Grid.Col>
 
-              <Grid.Col span={6}>
-                <TextInput
-                  label="AP_HIGH"
-                  placeholder="Enter AP_HIGH"
-                  value={form.values.AP_HIGH}
-                  onChange={(event) =>
-                    form.setFieldValue("AP_HIGH", event.currentTarget.value)
-                  }
-                  error={form.errors.AP_HIGH}
-                />
-              </Grid.Col>
+            <Grid.Col span={6}>
+              <TextInput
+                label="AP_HIGH"
+                placeholder="Enter AP_HIGH"
+                type="number"
+                value={form.values.AP_HIGH}
+                onChange={(event) =>
+                  form.setFieldValue(
+                    "AP_HIGH",
+                    Number(event.currentTarget.value)
+                  )
+                }
+                error={form.errors.AP_HIGH}
+              />
+            </Grid.Col>
 
-              <Grid.Col span={6}>
-                <TextInput
-                  label="AP_LOW"
-                  placeholder="Enter AP_LOW"
-                  value={form.values.AP_LOW}
-                  onChange={(event) =>
-                    form.setFieldValue("AP_LOW", event.currentTarget.value)
-                  }
-                  error={form.errors.AP_LOW}
-                />
-              </Grid.Col>
+            <Grid.Col span={6}>
+              <TextInput
+                label="AP_LOW"
+                placeholder="Enter AP_LOW"
+                type="number"
+                value={form.values.AP_LOW}
+                onChange={(event) =>
+                  form.setFieldValue(
+                    "AP_LOW",
+                    Number(event.currentTarget.value)
+                  )
+                }
+                error={form.errors.AP_LOW}
+              />
+            </Grid.Col>
 
-              <Grid.Col span={6}>
-                <Select
-                  label="Cholesterol"
-                  placeholder="Cholesterol Level"
-                  defaultValue="1"
-                  onChange={(value) =>
-                    form.setFieldValue("CHOLESTEROL", value ? value : "")
-                  }
-                  data={[{ value: "1" }, { value: "2" }, { value: "3" }]}
-                  error={form.errors.CHOLESTEROL}
-                />
-              </Grid.Col>
+            <Grid.Col span={6}>
+              <Select
+                label="Cholesterol"
+                placeholder="Cholesterol Level"
+                defaultValue="1"
+                onChange={(value) =>
+                  form.setFieldValue("CHOLESTEROL", value ? Number(value) : 1)
+                }
+                data={[
+                  { value: "1", label: "1" },
+                  { value: "2", label: "2" },
+                  { value: "3", label: "3" },
+                ]}
+                error={form.errors.CHOLESTEROL}
+              />
+            </Grid.Col>
 
-              <Grid.Col span={6}>
-                <Select
-                  label="Glucose"
-                  placeholder="Glucose Level"
-                  defaultValue="1"
-                  onChange={(value) =>
-                    form.setFieldValue("GLUCOSE", value ? value : "")
-                  }
-                  data={[{ value: "1" }, { value: "2" }, { value: "3" }]}
-                  error={form.errors.GLUCOSE}
-                />
-              </Grid.Col>
+            <Grid.Col span={6}>
+              <Select
+                label="Glucose"
+                placeholder="Glucose Level"
+                defaultValue="1"
+                onChange={(value) =>
+                  form.setFieldValue("GLUCOSE", value ? Number(value) : 1)
+                }
+                data={[
+                  { value: "1", label: "1" },
+                  { value: "2", label: "2" },
+                  { value: "3", label: "3" },
+                ]}
+                error={form.errors.GLUCOSE}
+              />
+            </Grid.Col>
 
-              <Grid.Col span={4}>
-                <Checkbox
-                  label="Smoke"
-                  color="violet"
-                  checked={form.values.SMOKE}
-                  onChange={(event) =>
-                    form.setFieldValue("SMOKE", event.currentTarget.checked)
-                  }
-                  error={form.errors.SMOKE}
-                />
-              </Grid.Col>
-              <Grid.Col span={4}>
-                <Checkbox
-                  label="Alcohol"
-                  color="violet"
-                  checked={form.values.ALCOHOL}
-                  onChange={(event) =>
-                    form.setFieldValue("ALCOHOL", event.currentTarget.checked)
-                  }
-                  error={form.errors.ALCOHOL}
-                />
-              </Grid.Col>
-              <Grid.Col span={4}>
-                <Checkbox
-                  label="Physical Activity"
-                  color="violet"
-                  checked={form.values.PHYSICAL_ACTIVITY}
-                  onChange={(event) =>
-                    form.setFieldValue(
-                      "PHYSICAL_ACTIVITY",
-                      event.currentTarget.checked
-                    )
-                  }
-                  error={form.errors.PHYSICAL_ACTIVITY}
-                />
-              </Grid.Col>
-              <Grid.Col
-                span={12}
-                style={{ display: "flex", justifyContent: "flex-end" }}
+            <Grid.Col span={4}>
+              <Checkbox
+                label="Smoke"
+                color="violet"
+                checked={form.values.SMOKE}
+                onChange={(event) =>
+                  form.setFieldValue("SMOKE", event.currentTarget.checked)
+                }
+                error={form.errors.SMOKE}
+              />
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <Checkbox
+                label="Alcohol"
+                color="violet"
+                checked={form.values.ALCOHOL}
+                onChange={(event) =>
+                  form.setFieldValue("ALCOHOL", event.currentTarget.checked)
+                }
+                error={form.errors.ALCOHOL}
+              />
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <Checkbox
+                label="Physical Activity"
+                color="violet"
+                checked={form.values.PHYSICAL_ACTIVITY}
+                onChange={(event) =>
+                  form.setFieldValue(
+                    "PHYSICAL_ACTIVITY",
+                    event.currentTarget.checked
+                  )
+                }
+                error={form.errors.PHYSICAL_ACTIVITY}
+              />
+            </Grid.Col>
+            <Grid.Col
+              span={12}
+              style={{ display: "flex", justifyContent: "flex-end" }}
+            >
+              <Button
+                type="submit"
+                color="violet"
+                variant="light"
+                disabled={false}
               >
-                <Button
-                  type="submit"
-                  color="violet"
-                  variant="light"
-                  disabled={false}
-                >
-                  Submit
-                </Button>
-              </Grid.Col>
-            </Grid>
-          </form>
-        </Paper>
-      </Container>
+                Submit
+              </Button>
+            </Grid.Col>
+          </Grid>
+        </form>
+      </Paper>
+      <Paper>
+        <Grid gutter="md" align="center">
+          <Grid.Col span={12}>
+            <h2>
+              Cardiovascular Disease:{" "}
+              {prediction ? (
+                <Text color="red">Yes</Text>
+              ) : (
+                <Text color="green">No</Text>
+              )}
+            </h2>
+          </Grid.Col>
+        </Grid>
+      </Paper>
     </div>
   );
 };
@@ -416,10 +452,8 @@ export default function Home() {
       </Head>
 
       <Layout>
-        <Container className={classes.wrapper} size={1400}>
-          {/* <InitialComponent /> */}
-          <CardioDataForm />
-        </Container>
+        {/* <InitialComponent /> */}
+        <CardioDataForm />
       </Layout>
     </>
   );

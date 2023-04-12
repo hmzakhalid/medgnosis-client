@@ -9,6 +9,10 @@ import {
   Table,
   Title,
   Button,
+  Group,
+  Card,
+  Stack,
+  Center,
 } from "@mantine/core";
 import Link from "next/link";
 import Layout from "@/components/Layout";
@@ -86,20 +90,6 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-const MOCKUP_USERS = [
-  {
-    name: "John Doe",
-    age: "24",
-    gender: "Male",
-    CARDIO_DISEASE: "Yes",
-  },
-  {
-    name: "Jane Doe",
-    age: "24",
-    gender: "Female",
-    CARDIO_DISEASE: "No",
-  },
-];
 
 const InitialComponent = () => {
   const { classes } = useStyles();
@@ -138,8 +128,21 @@ const InitialComponent = () => {
 
 export default function Home() {
   const { classes } = useStyles();
-  const [patients, setUsers] = useState(MOCKUP_USERS); // props.patients
-  const [tableRows, setTableRows] = useState([]);
+  const [globalModel, setGlobalModel] = useState();
+  const [individualHashes, setIndividualHashes] = useState([]);
+
+
+  
+  useEffect(() => {
+    const getMetrics = async () => {
+      const response = await fetch("http://localhost:8000/metrics");
+      const data = await response.json();
+      console.log(data);
+      setGlobalModel(data.global_model);
+      setIndividualHashes(data.contributors.splice(0, 10));
+    };
+    getMetrics();
+  }, []);
 
   return (
     <>
@@ -153,53 +156,34 @@ export default function Home() {
           {/* <InitialComponent /> */}
           <Title
             className={classes.title}
-            style={{ textAlign: "center", marginBottom: 20 }}
+            style={{  marginBottom: 20 }}
           >
-            Predictions
+            Metrics
           </Title>
 
-          {patients.length > 0 ? (
-            <ScrollArea>
-              <Table striped highlightOnHover>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Age</th>
-                    <th>Gender</th>
-                    <th>Prediction</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {patients.map((user, idx) => (
-                    <tr key={idx}>
-                      <td>{user.name}</td>
-                      <td>{user.age}</td>
-                      <td>{user.gender}</td>
-                      <td>{user.CARDIO_DISEASE}</td>
-                      <td>
-                        <Link href={`/patients/${user.name}`} className="mx-1">
-                          <IconExternalLink />
-                        </Link>
+    <Center>
+          <Stack>
+            <Card shadow="sm" padding="md" style={{ width: 500 }}>
+              <Text size="xl" weight={700}>
+                Global Model
+              </Text>
+              <Text size="sm" color="dimmed">
+                {globalModel}
+              </Text>
+            </Card>
+            <Card shadow="sm" padding="md" style={{ width: 500 }}>
+              <Text size="xl" weight={700}>
+                Individual Hashes
+              </Text>
+              <Text size="sm" color="dimmed">
+                {individualHashes.map((hash, idx) => (
+                  <div key={idx}>{hash}</div>
+                ))}
+              </Text>
+            </Card>
+          </Stack>
+          </Center>
 
-                        <Link href={`/patients/${user.name}/edit`} className="mx-1">
-                          <IconEdit />
-                        </Link>
-
-                        <Link href={`/patients/${user.name}/delete`} className="mx-1">
-                          <IconTrash color="red" />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </ScrollArea>
-          ) : (
-            <Text align="center" weight="bold">
-              Nincs megjeleníthető adat.
-            </Text>
-          )}
         </Container>
       </Layout>
     </>
