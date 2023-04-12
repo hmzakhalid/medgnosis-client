@@ -1,4 +1,5 @@
 import { Container, Title, Button, Text, Group, Stack } from "@mantine/core";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -14,15 +15,15 @@ const Hero = () => {
               secure and privacy-preserving collaborative medical machine
               learning using peer-to-peer federated learning.
             </Text>
+            <Link href="/auth">
             <Button
-              variant="light"
-              color="violet"
               radius="md"
               size="md"
-              className="w-36"
+              className="w-36 text-violet-300 bg-violet-700/25 hover:bg-violet-700/40"
             >
               Get Started
             </Button>
+            </Link>
           </Stack>
         </Group>
         <Group></Group>

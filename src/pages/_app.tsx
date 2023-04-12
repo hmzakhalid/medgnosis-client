@@ -1,7 +1,10 @@
 import { type AppType } from "next/app";
 import { type Session } from "next-auth";
+import { useState } from "react";
 import { SessionProvider } from "next-auth/react";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, type ColorScheme, ColorSchemeProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
 import { api } from "@/utils/api";
 import Head from "next/head";
 
@@ -11,6 +14,10 @@ const MyApp: AppType<{ session: Session | null }> = ({
   Component,
   pageProps: { session, ...pageProps },
 }) => {
+  const [colorScheme, setColorScheme] = useState<ColorScheme>('dark');
+  const toggleColorScheme = (value?: ColorScheme) =>
+    setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+
   return (
     <>
       <Head>
@@ -21,22 +28,23 @@ const MyApp: AppType<{ session: Session | null }> = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
       <MantineProvider
         withGlobalStyles
         withNormalizeCSS
         theme={{
-          colorScheme: "dark",
+          colorScheme: colorScheme,
           fontFamily: "Poppins, sans-serif",
-          colors: {
-            'cardBG': ['rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)', 'rgb(75 85 99 / 0.25)'],
-          }
-          
         }}
       >
-        <SessionProvider session={session}>
-          <Component {...pageProps} />
-        </SessionProvider>
+        <Notifications />
+        <ModalsProvider>
+          <SessionProvider session={session}>
+            <Component {...pageProps} />
+          </SessionProvider>
+        </ModalsProvider>
       </MantineProvider>
+      </ColorSchemeProvider>
     </>
   );
 };

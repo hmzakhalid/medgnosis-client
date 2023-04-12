@@ -33,9 +33,7 @@ const FeatureCard = ({
     >
       <Stack className="items-center text-center">
         <div className="text-white">
-          <ActionIcon color="violet" size="4rem" variant="light">
             {icon}
-          </ActionIcon>
         </div>
         <Text
           variant="light"
