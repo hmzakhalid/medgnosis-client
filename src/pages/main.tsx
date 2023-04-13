@@ -17,6 +17,15 @@ import {
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import { IconExternalLink, IconEdit, IconTrash } from "@tabler/icons-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 const useStyles = createStyles((theme) => ({
   wrapper: {
@@ -90,7 +99,6 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-
 const InitialComponent = () => {
   const { classes } = useStyles();
 
@@ -126,23 +134,122 @@ const InitialComponent = () => {
   );
 };
 
+// class Model(BaseModel):
+//     globalModel: str
+//     sessionId: str
+//     accuracy: str
+//     loss: str
+//     rounds: int
+//     strategy: str
+//     contributors: List[dict]
+
+type Contributor = {
+  id: string;
+  name: string;
+};
+
+type Model = {
+  globalModel: string;
+  sessionId: string;
+  accuracy: string;
+  loss: string;
+  rounds: number;
+  strategy: string;
+  contributors: Array<Contributor>;
+};
+
+const ModelCharts = () => {
+  const [models, setModels] = useState<Model[]>([]);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      const response = await fetch("http://localhost:8000/api/models");
+      const data = await response.json();
+      data.reverse();
+      setModels(data);
+    };
+
+    fetchModels();
+  }, []);
+
+  return (
+    <Stack>
+      <div className="flex gap-8">
+        <div>
+          <h2 className="mb-4 ml-8">
+            Global Accuracy:{" "}
+            <span className="ml-8">{models[9]?.accuracy.slice(0, 6)}</span>
+          </h2>
+          <LineChart width={600} height={300} data={models} margin={{ top: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="rounds" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="accuracy"
+              stroke="#8884d8"
+              activeDot={{ r: 8 }}
+            />
+          </LineChart>
+        </div>
+        <div>
+          <h2 className="mb-4 ml-8">
+            Global Loss:{" "}
+            <span className="ml-8">{models[9]?.loss.slice(0, 6)}</span>
+          </h2>
+          <LineChart width={600} height={300} data={models} margin={{ top: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="rounds" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="loss"
+              stroke="#82ca9d"
+              activeDot={{ r: 8 }}
+            />
+          </LineChart>
+        </div>
+      </div>
+      <div>
+        <Table>
+          <thead>
+            <tr>
+              <th>Aggregated Hash </th>
+              <th>Contributors</th>
+              <th>Accuracy</th>
+              <th>Loss</th>
+              <th>Rounds</th>
+              <th>Strategy</th>
+            </tr>
+          </thead>
+          <tbody>
+            {models
+              .slice(0)
+              .reverse()
+              .filter((model) => model.globalModel) // Filter out empty entries
+              .map((model, idx) => (
+                <tr key={idx}>
+                  <td>{model.globalModel}</td>
+                  <td>{model.contributors.length}</td>
+                  <td>{model.accuracy}</td>
+                  <td>{model.loss}</td>
+                  <td>{model.rounds}</td>
+                  <td>{model.strategy}</td>
+                </tr>
+              ))}
+          </tbody>
+        </Table>
+      </div>
+    </Stack>
+  );
+};
+
 export default function Home() {
   const { classes } = useStyles();
-  const [globalModel, setGlobalModel] = useState();
-  const [individualHashes, setIndividualHashes] = useState([]);
-
-
-  
-  useEffect(() => {
-    const getMetrics = async () => {
-      const response = await fetch("http://localhost:8000/metrics");
-      const data = await response.json();
-      console.log(data);
-      setGlobalModel(data.global_model);
-      setIndividualHashes(data.contributors.splice(0, 2));
-    };
-    getMetrics();
-  }, []);
 
   return (
     <>
@@ -152,39 +259,14 @@ export default function Home() {
       </Head>
 
       <Layout>
-        <Container className={classes.wrapper} size={1200}>
-          {/* <InitialComponent /> */}
-          <Title
-            className={classes.title}
-            style={{  marginBottom: 20 }}
-          >
-            Metrics
-          </Title>
+        {/* <InitialComponent /> */}
+        <Title className={classes.title} style={{ marginBottom: 20 }}>
+          Metrics
+        </Title>
 
-    <Center>
-          <Stack>
-            <Card shadow="sm" padding="md" style={{ width: 500 }}>
-              <Text size="xl" weight={700}>
-                Global Model
-              </Text>
-              <Text size="sm" color="dimmed">
-                {globalModel}
-              </Text>
-            </Card>
-            <Card shadow="sm" padding="md" style={{ width: 500 }}>
-              <Text size="xl" weight={700}>
-                Individual Hashes
-              </Text>
-              <Text size="sm" color="dimmed">
-                {individualHashes.map((hash, idx) => (
-                  <div key={idx}>{hash}</div>
-                ))}
-              </Text>
-            </Card>
-          </Stack>
-          </Center>
-
-        </Container>
+        <Center>
+          <ModelCharts />
+        </Center>
       </Layout>
     </>
   );

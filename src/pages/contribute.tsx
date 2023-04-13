@@ -272,7 +272,7 @@ export default function Home() {
       setLoading(true);
       setTimeout(() => {
         setLoading(false);
-      }, 5000);
+      }, 8000);
     } catch (error) {
       console.error("Error starting training:", error);
     }
