@@ -8,6 +8,8 @@ import {
   Table,
   Group,
   rem,
+  Loader,
+  Stack,
   Title,
   Button,
   Center,
@@ -242,34 +244,41 @@ export default function Home() {
   const { classes } = useStyles();
   const [tableRows, setTableRows] = useState<CardioData[]>([]);
   const [file, setFile] = useState<FileWithPath>();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleStartTraining = async () => {
     if (!file) {
       console.error("No file selected");
       return;
     }
-  
+
     const formData = new FormData();
     formData.append("file", file);
-  
+
     try {
       const response = await fetch("http://localhost:8000/upload", {
         method: "POST",
         body: formData,
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log(data.message);
+      setTableRows([]);
+      setFile(undefined);
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+      }, 5000);
     } catch (error) {
       console.error("Error starting training:", error);
     }
   };
 
-  
+
   return (
     <>
       <Head>
@@ -306,17 +315,27 @@ export default function Home() {
                 color="violet"
                 variant="light"
                 onClick={handleStartTraining}
-                // onClick={() => {
-                //   setTableRows([]);
-                //   setFile(undefined);
-                // }}
+              // onClick={() => {
+              //   setTableRows([]);
+              //   setFile(undefined);
+              // }}
               >
                 Start Training
               </Button>
             </Center>
           </>
         ) : (
-          <DropzoneComponent setTableRows={setTableRows} setFile={setFile} />
+          loading ?
+            <div className="flex flex-col justify-center items-center align-middle">
+                <Title
+                  className={classes.title}
+                  style={{ textAlign: "center", marginBottom: 20 }}
+                >
+                  Training in Progress
+                </Title>
+                <Loader variant="dots" size="xl" color="white" />
+            </div> :
+            <DropzoneComponent setTableRows={setTableRows} setFile={setFile} />
         )}
       </Layout>
     </>

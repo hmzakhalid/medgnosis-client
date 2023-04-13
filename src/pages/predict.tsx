@@ -10,6 +10,7 @@ import {
   Text,
   Title,
   Grid,
+  Loader,
   Checkbox,
   Button,
   Paper,
@@ -179,6 +180,7 @@ const CardioDataForm = () => {
   const { classes } = useStyles();
 
   const [prediction, setPrediction] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const form = useForm({
     initialValues: {
@@ -223,6 +225,10 @@ const CardioDataForm = () => {
 
       const data = await response.json();
       setPrediction(data.predictions);
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
     } catch (error) {
       console.error("Error fetching prediction:", error);
     }
@@ -429,9 +435,13 @@ const CardioDataForm = () => {
             <h2>
               Cardiovascular Disease:{" "}
               {prediction ? (
-                <Text color="red">Yes</Text>
+                <Text color="red">
+                  {loading ? <Loader variant="dots" color="white" /> : "Yes"}
+                  </Text>
               ) : (
-                <Text color="green">No</Text>
+                <Text color="green">
+                  {loading ? <Loader variant="dots" color="white" /> : "No"}
+                </Text>
               )}
             </h2>
           </Grid.Col>

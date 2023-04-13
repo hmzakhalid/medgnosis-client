@@ -139,7 +139,7 @@ export default function Home() {
       const data = await response.json();
       console.log(data);
       setGlobalModel(data.global_model);
-      setIndividualHashes(data.contributors.splice(0, 10));
+      setIndividualHashes(data.contributors.splice(0, 2));
     };
     getMetrics();
   }, []);

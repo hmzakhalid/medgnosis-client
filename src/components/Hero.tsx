@@ -15,7 +15,7 @@ const Hero = () => {
               secure and privacy-preserving collaborative medical machine
               learning using peer-to-peer federated learning.
             </Text>
-            <Link href="/auth">
+            <Link href="/main">
             <Button
               radius="md"
               size="md"
