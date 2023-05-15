@@ -14,10 +14,23 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Example {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Patients {
+    id                String   @id @default(cuid())
+    name              String
+    age               Int
+    gender            Int
+    height            Int
+    weight            Int
+    ap_high           Int
+    ap_low            Int
+    cholesterol       Int
+    glucose           Int
+    smoke             Boolean
+    alcohol           Boolean
+    physical_activity Boolean
+    cardio_disease    Boolean
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime @updatedAt
 }
 
 // Necessary for Next auth

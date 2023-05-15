@@ -4,6 +4,7 @@ import {
   IconMail,
   IconSettings,
   IconUserBolt,
+  IconEmergencyBed,
   IconUser,
   IconDrone,
 } from "@tabler/icons-react";
@@ -40,12 +41,7 @@ export default function SidebarComponent(props: Props) {
         <NavLink name="Dashboard" icon={<IconHome />} link="/main" />
         <NavLink name="Contribute" icon={<IconDrone />} link="/contribute" />
         <NavLink name="Prediction" icon={<IconUser />} link="/predict" />
-
-        <div className="absolute bottom-8 max-w-[12rem] w-full">
-          <Button color="violet" variant="light" className="w-full">
-            Logout
-          </Button>
-        </div>
+        <NavLink name="Patients" icon={<IconEmergencyBed />} link="/patients" />
       </Navbar.Section>
     </Navbar>
   );

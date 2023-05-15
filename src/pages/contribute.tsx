@@ -1,5 +1,4 @@
 import Head from "next/head";
-import { z } from "zod";
 import { useEffect, useState } from "react";
 import {
   createStyles,
@@ -245,6 +244,8 @@ export default function Home() {
   const [tableRows, setTableRows] = useState<CardioData[]>([]);
   const [file, setFile] = useState<FileWithPath>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [ws, setWs] = useState(null);
 
   const handleStartTraining = async () => {
     if (!file) {
@@ -267,6 +268,7 @@ export default function Home() {
 
       const data = await response.json();
       console.log(data.message);
+      setLogs([]);
       setTableRows([]);
       setFile(undefined);
       setLoading(true);
@@ -278,6 +280,33 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    const socket = new WebSocket("ws://localhost:8000/ws");
+    socket.onopen = () => {
+      console.log("WebSocket connected");
+      setWs(socket);
+    };
+    socket.onmessage = (event) => {
+      console.log(event.data); // logs training output
+      setLogs((logs) => [...logs, event.data]);
+      if (event.data === "Finished") {
+        socket.close();
+      }
+    };
+    socket.onclose = () => {
+      console.log("WebSocket disconnected");
+      setWs(null);
+    };
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      if (socket) {
+        socket.close();
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -315,27 +344,41 @@ export default function Home() {
                 color="violet"
                 variant="light"
                 onClick={handleStartTraining}
-              // onClick={() => {
-              //   setTableRows([]);
-              //   setFile(undefined);
-              // }}
               >
                 Start Training
               </Button>
             </Center>
           </>
+        ) : loading ? (
+          <div className="flex flex-col items-center justify-center align-middle">
+            <Title
+              className={classes.title}
+              style={{ textAlign: "center", marginBottom: 20 }}
+            >
+              Training in Progress
+            </Title>
+            {/* <Loader variant="dots" size="xl" color="white" /> */}
+            <ScrollArea h={400} className="my-8">
+              <div className="flex flex-col items-start">
+                {logs.map((log, index) => (
+                  <pre key={index}>{log}</pre>
+                ))}
+              </div>
+            </ScrollArea>
+            <Button
+              className="mx-2"
+              color="red"
+              variant="light"
+              onClick={() => {
+                setLoading(false);
+                setLogs([]);
+              }}
+            >
+              Reset
+            </Button>
+          </div>
         ) : (
-          loading ?
-            <div className="flex flex-col justify-center items-center align-middle">
-                <Title
-                  className={classes.title}
-                  style={{ textAlign: "center", marginBottom: 20 }}
-                >
-                  Training in Progress
-                </Title>
-                <Loader variant="dots" size="xl" color="white" />
-            </div> :
-            <DropzoneComponent setTableRows={setTableRows} setFile={setFile} />
+          <DropzoneComponent setTableRows={setTableRows} setFile={setFile} />
         )}
       </Layout>
     </>
