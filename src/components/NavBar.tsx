@@ -22,7 +22,7 @@ const NavBar = () => {
             <Link href="#" className="text-violet-300">About</Link>
             <Link href="#" className="text-violet-300">Contact</Link>
             <Button className="w-36 bg-violet-700/25 text-violet-300 hover:bg-violet-700/40">
-              Register Org
+              Lets Go
             </Button>
           </Group>
         </Group>

@@ -170,7 +170,7 @@ const CardioDataForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ data: values }),
+        body: JSON.stringify({ data: [values] }),
       });
 
       if (!response.ok) {
@@ -178,8 +178,8 @@ const CardioDataForm = () => {
       }
 
       const data = await response.json();
-      setPrediction(data.predictions);
-      form.values.CARDIO_DISEASE = Boolean(data.predictions);
+      setPrediction(data.predictions[0]);
+      form.values.CARDIO_DISEASE = Boolean(data.predictions[0]);
       patientMutation.mutate(form.values);
       setLoading(true);
       setTimeout(() => {

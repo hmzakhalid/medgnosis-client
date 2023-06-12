@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { z } from "zod";
+import { set, z } from "zod";
 import { useEffect, useState } from "react";
 import {
   createStyles,
@@ -171,13 +171,24 @@ const displayTable = (tableRows: CardioData[]) => {
             <td>{row.smoke ? "Yes" : "No"}</td>
             <td>{row.alcohol ? "Yes" : "No"}</td>
             <td>{row.physical_activity ? "Yes" : "No"}</td>
-            <td>{row.cardio_disease ? <Text color="red"> Yes </Text> : <Text color="green"> No </Text>}</td>
+            <td>
+              {row.cardio_disease ? (
+                <Text color="red"> Yes </Text>
+              ) : (
+                <Text color="green"> No </Text>
+              )}
+            </td>
           </tr>
         ))}
       </tbody>
     </Table>
   );
 };
+
+interface PredictionsResponse {
+  predictions: number[];
+}
+
 
 export default function Home() {
   const { classes } = useStyles();
@@ -188,6 +199,54 @@ export default function Home() {
     onSuccess: (data: CardioData[]) => {
       console.log("data", data);
       setTableRows(data);
+      const filteredData = data.map((item) => ({
+        age: item.age,
+        gender: item.gender,
+        height: item.height,
+        weight: item.weight,
+        ap_high: item.ap_high,
+        ap_low: item.ap_low,
+        cholesterol: item.cholesterol,
+        glucose: item.glucose,
+        smoke: item.smoke,
+        alcohol: item.alcohol,
+        physical_activity: item.physical_activity,
+      }));
+      
+      const arrayOfArrays = filteredData.map(item => Object.values(item));
+
+
+      const fetchPrediction = async () => {
+        try {
+          const response = await fetch("http://localhost:8000/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data: arrayOfArrays }),
+          });
+
+          const pData: PredictionsResponse = await response.json();
+          const { predictions } = pData;
+
+          const predictionData= data.map((item, index) => ({
+            ...item,
+            cardio_disease: predictions[index],
+          }));
+          setTableRows(predictionData);
+
+          console.log("Prediction data", predictionData);
+    
+        } catch (error) {
+          console.error("Error fetching prediction:", error);
+        }
+      };
+
+      fetchPrediction().then(() => {
+        console.log("Prediction done");
+      }).catch((error) => {
+        console.log("Prediction failed");
+      });
     },
   });
 
